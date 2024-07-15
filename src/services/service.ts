@@ -62,16 +62,24 @@ export const searchForLocations = async ({
   try {
     const encodedLocation = encodeURIComponent(locationSearch.value);
     const response = await fetch(`${GEOCODING_API_URL}&name=${encodedLocation}&count=10`);
-    const data = await response.json();
-    locationSuggestions.value = data.results.map((location: any) => ({
-      place_id: location.id,
-      name: location.name,
-      country: location.country,
-      latitude: location.latitude,
-      longitude: location.longitude,
-    }));
-  } catch (err) {
-    console.error('Error with locations fetching:', err)
+    if (response.ok) {
+      try {
+        const data = await response.json();
+        locationSuggestions.value = data.results.map((location: any) => ({
+          place_id: location.id,
+          name: location.name,
+          country: location.country,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        }));
+      } catch (parseErr) {
+        console.error('Error parsing location response:', parseErr);
+      }
+    } else {
+      console.error('Error fetching locations:', response.statusText);
+      locationSuggestions.value = [];
+      return;
+    }
   } finally {
     loading.value = false;
   }
